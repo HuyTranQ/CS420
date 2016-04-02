@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from IDSAlgorithm import ids_algorithm
+
 matplotlib.use('TkAgg')
 
 master = tkinter.Tk()
@@ -12,7 +14,7 @@ master.wm_title("Final Project - CS420")
 
 figure = plt.figure(figsize=(19 , 11))
 
-agent = GraphAgent('D:/Academics/CS420/test.txt')
+agent = GraphAgent('test.txt')
 pos = {}
 names = {}
 weights = {}
@@ -47,6 +49,10 @@ def add_new_edge():
     message.pack()
     cancel = tkinter.Button(new_node_panel, text='Cancel', command=new_node_panel.destroy)
     cancel.pack()
+
+result = ids_algorithm(agent, 2, 13)
+if result is not None:
+    print(result)
 
 button_add_edge = tkinter.Button(master , text='++Edge' , command = add_new_edge)
 button_add_edge.pack(side=tkinter.RIGHT)

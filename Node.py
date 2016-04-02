@@ -15,11 +15,11 @@ class Node:
 
     @property
     def x(self):
-        return self.x
+        return self._x
 
     @property
     def y(self):
-        return self.y
+        return self._y
 
     def estimate(self , target):
         return 1 + int(cmath.sqrt(pow(self._x - target.x , 2) + pow(self._y - target.y , 2)))
