@@ -21,7 +21,7 @@ def UCS(graph, start, goal):
             for e in explored:
                 if childnode == e:
                     b = True
-            if a == True and b == True:
+            if a != True and b != True:
                 heapq.heappush(frontier, (cost + childcost['cost'], childnode, path))
             elif a == True:
                 for idx, f in frontier:
