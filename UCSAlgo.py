@@ -12,7 +12,7 @@ def UCS(graph, start, goal):
         if node == goal:
             return path
         explored.append(node)
-        for childnode,childcost in graph.data.edge[start].items():
+        for childnode,childcost in graph.data.edge[node].items():
             a = False
             b = False
             for f in frontier:
