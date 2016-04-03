@@ -22,12 +22,12 @@ def UCS(graph, start, goal):
                 if childnode == e:
                     b = True
             if a == True and b == True:
-                heapq.heappush(frontier, (cost + childcost, childnode, path))
+                heapq.heappush(frontier, (cost + childcost['cost'], childnode, path))
             elif a == True:
                 for idx, f in frontier:
                     if childnode == f[1]:
                         if childcost < cost:
-                            frontier[idx] = (cost + childcost, childnode, path)
+                            frontier[idx] = (cost + childcost['cost'], childnode, path)
                             heapq.heapify(frontier)
                             break
     return None
