@@ -29,4 +29,5 @@ def UCS(graph, start, goal):
                         if childcost < cost:
                             frontier[idx] = (childcost, childnode, path)
                             heapq.heapify(frontier)
+                            break
     return None
