@@ -18,12 +18,14 @@ def UCS(graph, start, goal):
             for f in frontier:
                 if childnode == f[1]:
                     a = True
+                    break
             for e in explored:
                 if childnode == e:
                     b = True
-            if a != True and b != True:
+                    break
+            if a is not True and b is not True:
                 heapq.heappush(frontier, (cost + childcost['cost'], childnode, path))
-            elif a == True:
+            elif a is True:
                 for idx, f in enumerate(frontier):
                     if childnode == f[1]:
                         if childcost['cost'] < cost:
