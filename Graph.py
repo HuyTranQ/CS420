@@ -1,8 +1,9 @@
 from sys import argv
 import networkx as nx
 from Node import Node
-import cmath
+import math
 import networkx as nx
+
 
 class GraphAgent:
     """Artificial Intelligence Agent"""
@@ -33,4 +34,4 @@ class GraphAgent:
     def heuristic(self , source , target):
         x = self.graph.node[source]['x'] - self.graph.node[target]['x']
         y = self.graph.node[source]['y'] - self.graph.node[target]['y']
-        return 1 + int(1.618 * cmath.sqrt(x * x + y * y))
+        return 1 + int(1.618 * math.sqrt(x ** 2 + y ** 2))
