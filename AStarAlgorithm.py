@@ -31,7 +31,7 @@ def a_star_algorithm(agent , start , goal):
             return {'cost' : cost[goal] , 'path' : path}
         opened.remove(current)
         closed.add(current)
-        yield {'opened' : opened , 'closed' : closed , 'cost' : cost , 'total' : total}
+        yield {'opened' : opened , 'closed' : closed , 'cost' : cost , 'total' : total , 'previous' : previous}
         for neighbor in agent.graph.neighbors(current):
             new_cost = cost[current] + agent.graph[current][neighbor]['cost']
             if new_cost >= cost[neighbor]:

@@ -61,6 +61,8 @@ def add_new_edge():
 button_add_edge = tkinter.Button(master , text='++Edge' , command = add_new_edge)
 button_add_edge.grid(row=1 , column=1)
 
+node_labels = {}
+
 
 def next_stage():
     global state
@@ -68,25 +70,47 @@ def next_stage():
         return
     try:
         stage = next(iterator)
+        global graph
+        graph = agent.graph.copy()
         if state == 0:
+            names.clear()
             opened = stage['opened']
             closed = stage['closed']
             cost = stage['cost']
             total = stage['total']
-            opened_labels = {}
-            closed_labels = {}
+            previous = stage['previous']
+            edges = []
+            global node_labels
+            new_labels = {}
+            renew_labels = {}
             for node in opened:
-                opened_labels[node] = '\n\nestimate=' + str(total[node]) + '\ncost=' + str(cost[node])
+                new_value = '\n\n\n\nf=' + str(total[node]) + '\ng=' + str(cost[node])
+                if node not in node_labels:
+                    new_labels[node] = new_value
+                else:
+                    renew_labels[node_labels[node]] = new_value
+                node_labels[node] = new_value
             for node in closed:
-                closed_labels[node] = '\n\nestimate=' + str(total[node]) + '\ncost=' + str(cost[node])
-            nx.draw_networkx_nodes(graph , pos , nodelist=stage['opened'] , node_color='#f44336' , label=opened_labels)
-            nx.draw_networkx_nodes(graph , pos , nodelist=stage['closed'] , node_color='#3f51b5' , label=closed_labels)
+                new_value = '\n\n\n\nf=' + str(total[node]) + '\ng=' + str(cost[node])
+                if node not in node_labels:
+                    new_labels[node] = new_value
+                else:
+                    renew_labels[node_labels[node]] = new_value
+                node_labels[node] = new_value
+            for a , b in previous.items():
+                edges.append((a , b))
+            nx.draw_networkx_nodes(graph , pos , nodelist=opened , node_color='#f44336')
+            nx.draw_networkx_nodes(graph , pos , nodelist=closed , node_color='#3f51b5')
+            nx.draw_networkx_labels(graph , pos , new_labels , font_weight='normal')
+            nx.relabel_nodes(graph , renew_labels)
+            nx.draw_networkx_edges(graph , pos , edgelist=edges , edge_color='#1b5e20' , width=4)
         canvas.show()
     except StopIteration as exception:
         result = exception.value
         is_first = True
         previous = -1
         pair = []
+        node_labels = {}
         for node in result['path']:
             if is_first:
                 is_first = False
@@ -104,19 +128,12 @@ button_add_edge.grid(row=2 , column=1)
 
 def reset():
     pos.clear()
-    names.clear()
     weights.clear()
     graph = agent.graph.copy()
     for key in graph.nodes_iter():
         pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
-        names[key] = graph.node[key]['name'] + '\n\n'
-
-    for source, target, attribute in graph.edges_iter(data=True):
-        weights[(source, target)] = attribute['cost']
 
     nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
-    nx.draw_networkx_edge_labels(graph, pos, weights, font_size=13)
-    nx.draw_networkx_labels(graph, pos, names, font_size=13)
     canvas.show()
     global state
     state = -1
@@ -142,7 +159,7 @@ def get_info():
             goal = node
     return start , goal
 
-iterator = None
+iterator = {}
 
 
 def launch_a_star():
