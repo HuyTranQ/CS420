@@ -8,10 +8,15 @@ import networkx as nx
 class GraphAgent:
     """Artificial Intelligence Agent"""
 
-    def __init__(self, filename):
+    def __init__(self, filename=None):
+        if filename is None:
+            self.node_size = 0
+            self.edge_size = 0
+            self.data = nx.Graph()
+            return
+
         with open(filename, 'r') as input_file:
             self.node_size = int(input_file.readline())
-            # self.data = {}
             self.data = nx.Graph()
             for i in range(self.node_size):
                 _key = int(input_file.readline())
@@ -37,10 +42,12 @@ class GraphAgent:
         return 1 + int(1.618 * math.sqrt(x ** 2 + y ** 2))
 
     def add_node(self, name, x, y):
-        pass
+        self.data.add_node(self.node_size, name=name, x=x, y=y)
+        self.node_size += 1
 
     def add_edge(self, source, target, weight):
-        pass
+        self.data.add_edge(source, target, cost=weight)
+        self.edge_size += 1
 
     def export(self, filename):
         with open(filename, 'w') as output_file:
@@ -53,7 +60,7 @@ class GraphAgent:
                 output_file.write(str(attr['x']) + '\n')
                 output_file.write(str(attr['y']) + '\n')
 
-            output_file.write(str(len(nx.edges(self.data))) + '\n')
+            output_file.write(str(self.edge_size) + '\n')
             for source, target in self.data.edges_iter():
                 attr = self.data.edge[source][target]
                 output_file.write(str(source) + '\n')

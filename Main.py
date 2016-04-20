@@ -39,33 +39,97 @@ canvas.show()
 canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
 
 
-def add_new_node():
-    new_node_panel = tkinter.Toplevel(width=500, height=200)
-    new_node_panel.wm_title('Add a new node to graph')
-    message = tkinter.Message(new_node_panel , text='Please fill in the following information')
-    message.pack()
-    cancel = tkinter.Button(new_node_panel , text='Cancel' , command = new_node_panel.destroy)
-    cancel.pack()
+def add_node(name, x, y):
+    agent.add_node(name, x, y)
+    reset()
+    combox_source['values'] = list(names.values())
+    combox_target['values'] = list(names.values())
 
 
-def add_new_edge():
-    new_node_panel = tkinter.Toplevel(master=None, width=500, height=200)
-    new_node_panel.wm_title('Add a new edge to graph')
-    message = tkinter.Message(new_node_panel, text='Message')
-    message.pack()
-    cancel = tkinter.Button(new_node_panel, text='Cancel', command=new_node_panel.destroy)
-    cancel.pack()
-    new_node_panel.mainloop()
+def add_new_node_callback():
+    new_node_panel = tkinter.Toplevel()
+    new_node_panel.geometry("300x125")
+    new_node_panel.wm_title('Add new nodes')
+
+    info_frame = tkinter.Frame(new_node_panel)
+    info_frame.pack()
+
+    tkinter.Label(info_frame, text='Please fill in the following information').grid(row=0, columnspan=2)
+
+    tkinter.Label(info_frame, text='Name').grid(row=1, column=0)
+    _name = tkinter.StringVar()
+    entry_name = tkinter.Entry(info_frame, textvariable=_name)
+    entry_name.grid(row=1, column=1)
+
+    tkinter.Label(info_frame, text='x').grid(row=2, column=0)
+    _x = tkinter.IntVar()
+    entry_x = tkinter.Entry(info_frame, textvariable=_x)
+    entry_x.grid(row=2, column=1)
+
+    tkinter.Label(info_frame, text='y').grid(row=3, column=0)
+    _y = tkinter.IntVar()
+    entry_y = tkinter.Entry(info_frame, textvariable=_y)
+    entry_y.grid(row=3, column=1)
+
+    action_frame = tkinter.Frame(new_node_panel)
+    action_frame.pack(side=tkinter.BOTTOM)
+
+    add = tkinter.Button(action_frame, text='Add node',
+                         command=lambda : add_node(_name.get(), _x.get(), _y.get()))
+
+    add.pack(side=tkinter.LEFT)
+    cancel = tkinter.Button(action_frame, text='Exit', command=new_node_panel.destroy)
+    cancel.pack(side=tkinter.LEFT)
+
+
+def add_edge(source, target, weight):
+    agent.add_edge(source, target, weight)
+    reset()
+
+
+def add_new_edge_callback():
+    new_edge_panel = tkinter.Toplevel()
+    new_edge_panel.geometry("300x125")
+    new_edge_panel.wm_title('Add new edges')
+
+    info_frame = tkinter.Frame(new_edge_panel)
+    info_frame.pack()
+
+    tkinter.Label(info_frame, text='Please fill in the following information').grid(row=0, columnspan=2)
+
+    tkinter.Label(info_frame, text='Source').grid(row=1, column=0)
+    cb_source = ttk.Combobox(info_frame, values=list(names.values()), state='readonly')
+    cb_source.grid(row=1, column=1)
+
+    tkinter.Label(info_frame, text='Target').grid(row=2, column=0)
+    cb_target = ttk.Combobox(info_frame, values=list(names.values()), state='readonly')
+    cb_target.grid(row=2, column=1)
+
+    tkinter.Label(info_frame, text='Weight').grid(row=3, column=0)
+    weight = tkinter.IntVar()
+    entry_weight = tkinter.Entry(info_frame, textvariable=weight)
+    entry_weight.grid(row=3, column=1)
+
+    action_frame = tkinter.Frame(new_edge_panel)
+    action_frame.pack(side=tkinter.BOTTOM)
+
+    add = tkinter.Button(action_frame, text='Add edge',
+                         command=lambda : add_edge(cb_source.current(),
+                                                   cb_target.current(),
+                                                   weight.get()))
+    add.pack(side=tkinter.LEFT)
+    cancel = tkinter.Button(action_frame, text='Exit', command=new_edge_panel.destroy)
+    cancel.pack(side=tkinter.LEFT)
 
 graph_control_frame = tkinter.Frame(master)
 graph_control_frame.grid(row=0, column=1)
 
 tkinter.Label(graph_control_frame, text="GRAPH", font=("Helvetica", 16)).pack(side=tkinter.TOP)
 
-button_add_node = tkinter.Button(graph_control_frame, text='++Node' , command = add_new_node)
+button_add_node = tkinter.Button(graph_control_frame, text='Add nodes' , command = add_new_node_callback)
 button_add_node.pack()
 
-button_add_edge = tkinter.Button(graph_control_frame, text='++Edge' , command = add_new_edge)
+button_add_edge = tkinter.Button(graph_control_frame, text='Add edges' , command = add_new_edge_callback)
 button_add_edge.pack()
 
 node_labels = {}
@@ -179,11 +243,18 @@ def next_stage():
 
 def reset():
     plt.clf()
-    # pos.clear()
-    # weights.clear()
+    names.clear()
+    pos.clear()
+    weights.clear()
+
     graph = agent.graph.copy()
-    # for key in graph.nodes_iter():
-    #    pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
+
+    for key in graph.nodes_iter():
+        pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
+        names[key] = graph.node[key]['name'] + '\n\n'
+
+    for source , target , attribute in graph.edges_iter(data=True):
+        weights[(source , target)] = attribute['cost']
 
     nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
     nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
@@ -254,5 +325,11 @@ button_next.pack()
 
 button_reset = tkinter.Button(demo_frame, text='Reset' , command=reset)
 button_reset.pack()
-agent.export('graph_export.txt')
+
+
+def on_window_closed():
+    agent.export('graph_export.txt')
+    master.destroy()
+
+master.protocol(name="WM_DELETE_WINDOW", func=on_window_closed)
 master.mainloop()
