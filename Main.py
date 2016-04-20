@@ -15,6 +15,7 @@ master = tkinter.Tk()
 master.wm_title("Final Project - CS420")
 
 figure = plt.figure(figsize=(19 , 11))
+figure.add_axes()
 
 state = -1
 agent = GraphAgent('test.txt')
@@ -35,7 +36,7 @@ nx.draw_networkx_labels(graph, pos, names, font_size=13)
 
 canvas = FigureCanvasTkAgg(figure, master)
 canvas.show()
-canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=4)
+canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=5)
 
 
 def add_new_node():
@@ -73,7 +74,7 @@ def next_stage():
         global graph
         graph = agent.graph.copy()
         if state == 0:
-            names.clear()
+            # names.clear()
             opened = stage['opened']
             closed = stage['closed']
             cost = stage['cost']
@@ -104,9 +105,56 @@ def next_stage():
             nx.draw_networkx_labels(graph , pos , new_labels , font_weight='normal')
             nx.relabel_nodes(graph , renew_labels)
             nx.draw_networkx_edges(graph , pos , edgelist=edges , edge_color='#1b5e20' , width=4)
+
+        elif state == 1:
+            # names.clear()
+            edges = []
+            cur_path = stage['current path']
+            opened = stage['opened']
+
+            if stage['depth changed']:
+                plt.clf()
+                graph = agent.graph.copy()
+
+                nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
+                nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
+                nx.draw_networkx_labels(graph, pos, names, font_size=13)
+
+                canvas.show()
+                node_labels.clear()
+
+            # new_labels = {}
+            # renew_labels = {}
+            # for i, node in enumerate(cur_path):
+            #     new_value = 'd=' + str(i)
+            #     if node not in node_labels:
+            #         new_labels[node] = '\n\n\n\n' + new_value
+            #         node_labels[node] = '\n\n\n\n' + new_value
+            #     elif node in renew_labels:
+            #         renew_labels[renew_labels[node]] = renew_labels[node] + '\n' + new_value
+            #     else:
+            #         renew_labels[node_labels[node]] = node_labels[node] + '\n' + new_value
+
+            for i in range(0, len(cur_path) - 1):
+                edges.append((cur_path[i], cur_path[i + 1]))
+
+            opened_nodes = set()
+            for node in opened:
+                opened_nodes.add(node[0])
+            for node in cur_path:
+                opened_nodes.add(node)
+
+            nx.draw_networkx_nodes(graph, pos, nodelist=opened_nodes, node_color='#4caf50')
+            # nx.draw_networkx_nodes(graph, pos, nodelist=cur_path, node_color='#3f51b5')
+            # nx.draw_networkx_labels(graph, pos, node_labels, font_weight='normal')
+            # nx.relabel_nodes(graph, renew_labels)
+            nx.draw_networkx_edges(graph, pos, edgelist=graph.edges(), edge_color='#2196f3', width=4)
+            nx.draw_networkx_edges(graph, pos, edgelist=edges, edge_color='#1b5e20', width=4)
         canvas.show()
     except StopIteration as exception:
         result = exception.value
+        if result is None:
+            return
         is_first = True
         previous = -1
         pair = []
@@ -122,30 +170,21 @@ def next_stage():
         canvas.show()
         print(result)
 
-button_add_edge = tkinter.Button(master , text='Next' , command = next_stage)
-button_add_edge.grid(row=2 , column=1)
-
 
 def reset():
-    pos.clear()
-    weights.clear()
+    plt.clf()
+    # pos.clear()
+    # weights.clear()
     graph = agent.graph.copy()
-    for key in graph.nodes_iter():
-        pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
+    # for key in graph.nodes_iter():
+    #    pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
 
     nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
+    nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
+    nx.draw_networkx_labels(graph, pos, names, font_size=13)
     canvas.show()
     global state
     state = -1
-
-button_reset = tkinter.Button(master , text='Reset' , command=reset)
-button_reset.grid(row=3 , column=1)
-
-combox_source = ttk.Combobox(master , values=list(names.values()), state='readonly')
-combox_source.grid(row=4 , column=1)
-
-combox_target = ttk.Combobox(master , values=list(names.values()), state='readonly')
-combox_target.grid(row=5 , column=1)
 
 
 def get_info():
@@ -169,7 +208,44 @@ def launch_a_star():
     global state
     state = 0
 
-button_a_star = tkinter.Button(master , text='A*' , command=launch_a_star)
-button_a_star.grid(row=6 , column=1)
+
+def launch_ids():
+    info = get_info()
+    global iterator
+    iterator = ids_algorithm(agent , info[0] , info[1])
+    global state
+    state = 1
+
+demo_frame = tkinter.Frame(master)
+demo_frame.grid(row=4, column=1)
+
+tkinter.Label(demo_frame, text="Source").pack(side=tkinter.TOP)
+combox_source = ttk.Combobox(demo_frame, values=list(names.values()), state='readonly')
+combox_source.pack()
+
+tkinter.Label(demo_frame, text="Target").pack(side=tkinter.TOP)
+combox_target = ttk.Combobox(demo_frame , values=list(names.values()), state='readonly')
+combox_target.pack()
+
+alg_frame = tkinter.Frame(demo_frame)
+alg_frame.pack(side=tkinter.TOP)
+
+tkinter.Label(alg_frame, text="Algorithm").pack(side=tkinter.TOP)
+
+button_a_star = tkinter.Button(alg_frame, text='A*' , command=launch_a_star)
+button_a_star.pack(side=tkinter.LEFT)
+
+button_ids = tkinter.Button(alg_frame, text='IDS', command=launch_ids)
+button_ids.pack(side=tkinter.LEFT)
+
+button_ucs = tkinter.Button(alg_frame, text='UCS', command=None)
+button_ucs.pack(side=tkinter.LEFT)
+
+tkinter.Label(demo_frame, text="Control").pack(side=tkinter.TOP)
+button_next = tkinter.Button(demo_frame, text='Next' , command = next_stage)
+button_next.pack()
+
+button_reset = tkinter.Button(demo_frame, text='Reset' , command=reset)
+button_reset.pack()
 
 master.mainloop()

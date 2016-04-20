@@ -1,22 +1,51 @@
-def dfs(graph, start, end, limit, solution):
-    if limit == 0 and start == end:
-        return True, solution
-    elif limit > 0:
-        for child in graph.data.edge[start]:
-            solution.append(child)
-            found, result = dfs(graph, child, end, limit - 1, solution)
-            if found:
-                return True, result
-            solution.pop(len(solution) - 1)
-    return False, None
+from networkx import nx
 
 
 def ids_algorithm(graph, start, end):
-    sol = [start]
-    limit = 0
-    while True:
-        found, result = dfs(graph, start, end, limit, sol)
-        if found:
-            return result
-        limit += 1
+    max_limit = 0
+
+    # assume maximum depth must be the number of nodes n in the graph (branching factor = 1)
+    # then return failure if the depth limit surpass n
+    while max_limit <= len(nx.nodes(graph.graph)):
+        depth_changed = True
+        limit = 0
+        solution = []
+        cost = [0]
+        opened = [(start, 0, 0)]
+
+        # search until limit reaches 0
+        while len(opened) > 0:
+            cur = opened.pop(0)
+            while len(solution) != cur[1]:
+                solution.pop(len(solution) - 1)
+                cost.pop(len(cost) - 1)
+            solution.append(cur[0])
+            cost.append(cost[len(cost) - 1] + cur[2])
+
+            yield {'depth changed' : depth_changed, 'current path' : solution,
+                   'opened' : opened, 'cost' : cost[1:len(cost)]}
+
+            if limit > cur[1]:
+                limit = cur[1]
+
+            if limit == max_limit and cur[0] == end:    # a solution is found
+                return {'path' : solution, 'cost' : cost[len(cost) - 1]}
+            elif limit < max_limit:
+                if limit == cur[1]:
+                    limit += 1
+                elif limit > cur[1]:
+                    limit = cur[1]
+
+                # get all child nodes
+                tmp = []
+                for child in graph.graph.edges_iter(cur[0], data=True):
+                    tmp.append((child[1], limit, child[2]['cost']))
+
+                opened = tmp + opened
+
+                depth_changed = False
+
+        # increase depth limit
+        max_limit += 1
+
     return None
