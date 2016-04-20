@@ -6,6 +6,7 @@ import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from AStarAlgorithm import *
 from tkinter import ttk
+from tkinter import messagebox
 
 from IDSAlgorithm import ids_algorithm
 
@@ -15,7 +16,6 @@ master = tkinter.Tk()
 master.wm_title("Final Project - CS420")
 
 figure = plt.figure(figsize=(19 , 11))
-figure.add_axes()
 
 state = -1
 agent = GraphAgent('test.txt')
@@ -36,31 +36,37 @@ nx.draw_networkx_labels(graph, pos, names, font_size=13)
 
 canvas = FigureCanvasTkAgg(figure, master)
 canvas.show()
-canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=5)
+canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
 
 
 def add_new_node():
-    new_node_panel = tkinter.Toplevel()
+    new_node_panel = tkinter.Toplevel(width=500, height=200)
     new_node_panel.wm_title('Add a new node to graph')
-    message = tkinter.Message(new_node_panel , text='Message')
+    message = tkinter.Message(new_node_panel , text='Please fill in the following information')
     message.pack()
     cancel = tkinter.Button(new_node_panel , text='Cancel' , command = new_node_panel.destroy)
     cancel.pack()
 
-button_add_node = tkinter.Button(master , text='++Node' , command = add_new_node)
-button_add_node.grid(row=0 , column=1)
-
 
 def add_new_edge():
-    new_node_panel = tkinter.Toplevel()
+    new_node_panel = tkinter.Toplevel(master=None, width=500, height=200)
     new_node_panel.wm_title('Add a new edge to graph')
     message = tkinter.Message(new_node_panel, text='Message')
     message.pack()
     cancel = tkinter.Button(new_node_panel, text='Cancel', command=new_node_panel.destroy)
     cancel.pack()
+    new_node_panel.mainloop()
 
-button_add_edge = tkinter.Button(master , text='++Edge' , command = add_new_edge)
-button_add_edge.grid(row=1 , column=1)
+graph_control_frame = tkinter.Frame(master)
+graph_control_frame.grid(row=0, column=1)
+
+tkinter.Label(graph_control_frame, text="GRAPH", font=("Helvetica", 16)).pack(side=tkinter.TOP)
+
+button_add_node = tkinter.Button(graph_control_frame, text='++Node' , command = add_new_node)
+button_add_node.pack()
+
+button_add_edge = tkinter.Button(graph_control_frame, text='++Edge' , command = add_new_edge)
+button_add_edge.pack()
 
 node_labels = {}
 
@@ -217,8 +223,9 @@ def launch_ids():
     state = 1
 
 demo_frame = tkinter.Frame(master)
-demo_frame.grid(row=4, column=1)
+demo_frame.grid(row=2, column=1)
 
+tkinter.Label(demo_frame, text="DEMO", font=("Helvetica", 16)).pack(side=tkinter.TOP)
 tkinter.Label(demo_frame, text="Source").pack(side=tkinter.TOP)
 combox_source = ttk.Combobox(demo_frame, values=list(names.values()), state='readonly')
 combox_source.pack()
@@ -247,5 +254,5 @@ button_next.pack()
 
 button_reset = tkinter.Button(demo_frame, text='Reset' , command=reset)
 button_reset.pack()
-
+agent.export('graph_export.txt')
 master.mainloop()
