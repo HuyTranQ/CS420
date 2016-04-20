@@ -10,7 +10,9 @@ def UCS(graph, start, goal):
         cost, node, path = heapq.heappop(frontier)
         path = path + [node]
         if node == goal:
-            return path
+            return {'path': path, 'cost': cost}
+        #yield {'frontier': frontier, 'explored': explored}
+        yield{'cost': cost, 'node': node, 'path': path, 'start':start, 'goal': goal}
         explored.append(node)
         for childnode,childcost in graph.data.edge[node].items():
             a = False

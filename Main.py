@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from AStarAlgorithm import *
+from UCSAlgo import *
 from tkinter import ttk
 from tkinter import messagebox
 
@@ -15,7 +16,7 @@ matplotlib.use('TkAgg')
 master = tkinter.Tk()
 master.wm_title("Final Project - CS420")
 
-figure = plt.figure(figsize=(19 , 11))
+figure = plt.figure(figsize=(10 , 7))
 
 state = -1
 agent = GraphAgent('test.txt')
@@ -220,6 +221,27 @@ def next_stage():
             # nx.relabel_nodes(graph, renew_labels)
             nx.draw_networkx_edges(graph, pos, edgelist=graph.edges(), edge_color='#2196f3', width=4)
             nx.draw_networkx_edges(graph, pos, edgelist=edges, edge_color='#1b5e20', width=4)
+
+        elif state == 7:
+            node = set()
+            new_labels = {}
+            node.add(stage['node'])
+            path = stage['path']
+            cost = stage['cost']
+            new_labels[stage['node']] = '\n\n\n\ncost = ' + str(cost)
+            edges = []
+            for i in range(0, len(path) - 1):
+                edges.append((path[i], path[i + 1]))
+            supernode = set()
+            supernode.add(stage['start'])
+            supernode.add(stage['goal'])
+
+            nx.draw_networkx_nodes(graph, pos, nodelist=node, node_color='#3bd28a')
+            nx.draw_networkx_nodes(graph, pos, nodelist=supernode, node_color='#512da8')
+            nx.draw_networkx_edges(graph, pos, edgelist=graph.edges(), edge_color='#2196f3', width=4)
+            nx.draw_networkx_edges(graph, pos, edgelist=edges, edge_color='#ffc0ff', width=4)
+            nx.draw_networkx_labels(graph, pos, new_labels, font_weight='normal')
+
         canvas.show()
     except StopIteration as exception:
         result = exception.value
@@ -293,6 +315,13 @@ def launch_ids():
     global state
     state = 1
 
+def launch_ucs():
+    info = get_info()
+    global iterator
+    iterator = UCS(agent , info[0] , info[1])
+    global state
+    state = 7
+
 demo_frame = tkinter.Frame(master)
 demo_frame.grid(row=2, column=1)
 
@@ -316,7 +345,7 @@ button_a_star.pack(side=tkinter.LEFT)
 button_ids = tkinter.Button(alg_frame, text='IDS', command=launch_ids)
 button_ids.pack(side=tkinter.LEFT)
 
-button_ucs = tkinter.Button(alg_frame, text='UCS', command=None)
+button_ucs = tkinter.Button(alg_frame, text='UCS', command=launch_ucs)
 button_ucs.pack(side=tkinter.LEFT)
 
 tkinter.Label(demo_frame, text="Control").pack(side=tkinter.TOP)
