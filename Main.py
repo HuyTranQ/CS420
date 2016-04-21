@@ -16,7 +16,16 @@ matplotlib.use('TkAgg')
 master = tkinter.Tk()
 master.wm_title("Final Project - CS420")
 
-figure = plt.figure(figsize=(10 , 7))
+figure = plt.figure(figsize=(19 , 11))
+mouse_x = tkinter.IntVar()
+mouse_y = tkinter.IntVar()
+
+
+def onclick(event):
+    global mouse_x
+    mouse_x.set(str(int(round(event.xdata))))
+    global mouse_y
+    mouse_y.set(str(int(round(event.ydata))))
 
 state = -1
 agent = GraphAgent('test.txt')
@@ -38,6 +47,8 @@ nx.draw_networkx_labels(graph, pos, names, font_size=13)
 canvas = FigureCanvasTkAgg(figure, master)
 canvas.show()
 canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
+
+canvas.mpl_connect('button_press_event', onclick)
 
 
 def add_node(name, x, y):
@@ -63,20 +74,18 @@ def add_new_node_callback():
     entry_name.grid(row=1, column=1)
 
     tkinter.Label(info_frame, text='x').grid(row=2, column=0)
-    _x = tkinter.IntVar()
-    entry_x = tkinter.Entry(info_frame, textvariable=_x)
+    entry_x = tkinter.Entry(info_frame, textvariable=mouse_x)
     entry_x.grid(row=2, column=1)
 
     tkinter.Label(info_frame, text='y').grid(row=3, column=0)
-    _y = tkinter.IntVar()
-    entry_y = tkinter.Entry(info_frame, textvariable=_y)
+    entry_y = tkinter.Entry(info_frame, textvariable=mouse_y)
     entry_y.grid(row=3, column=1)
 
     action_frame = tkinter.Frame(new_node_panel)
     action_frame.pack(side=tkinter.BOTTOM)
 
     add = tkinter.Button(action_frame, text='Add node',
-                         command=lambda : add_node(_name.get(), _x.get(), _y.get()))
+                         command=lambda : add_node(_name.get(), mouse_x.get(), mouse_y.get()))
 
     add.pack(side=tkinter.LEFT)
     cancel = tkinter.Button(action_frame, text='Exit', command=new_node_panel.destroy)
