@@ -22,8 +22,9 @@ def ids_algorithm(graph, start, end):
             solution.append(cur[0])
             cost.append(cost[len(cost) - 1] + cur[2])
 
-            yield {'depth changed' : depth_changed, 'current path' : solution,
-                   'opened' : opened, 'cost' : cost[1:len(cost)]}
+            if len(solution) == max_limit:
+                yield {'depth changed' : depth_changed, 'current path' : solution,
+                       'opened' : opened, 'cost' : cost[1:len(cost)]}
 
             if limit > cur[1]:
                 limit = cur[1]

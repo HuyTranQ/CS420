@@ -30,7 +30,7 @@ def UCS(graph, start, goal):
             elif a is True:
                 for idx, f in enumerate(frontier):
                     if childnode == f[1]:
-                        if childcost['cost'] < cost:
+                        if f[0] > childcost['cost'] + cost:
                             frontier[idx] = (cost + childcost['cost'], childnode, path)
                             heapq.heapify(frontier)
                             break

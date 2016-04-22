@@ -7,7 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from AStarAlgorithm import *
 from UCSAlgo import *
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import filedialog
+import time
 
 from IDSAlgorithm import ids_algorithm
 
@@ -20,44 +21,70 @@ figure = plt.figure(figsize=(19 , 11))
 mouse_x = tkinter.IntVar()
 mouse_y = tkinter.IntVar()
 
+state = -1
+agent = GraphAgent()
+graph = agent.graph.copy()
+pos = {}
+names = {}
+weights = {}
 
+
+'''====================================================================================================================
+'   Callbacks
+===================================================================================================================='''
+
+
+# Get node position from click
 def onclick(event):
     global mouse_x
     mouse_x.set(str(int(round(event.xdata))))
     global mouse_y
     mouse_y.set(str(int(round(event.ydata))))
 
-state = -1
-agent = GraphAgent('test.txt')
-pos = {}
-names = {}
-weights = {}
-graph = agent.graph.copy()
-for key in graph.nodes_iter():
-    pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
-    names[key] = graph.node[key]['name'] + '\n\n'
 
-for source , target , attribute in graph.edges_iter(data=True):
-    weights[(source , target)] = attribute['cost']
+# Load graph from file
+def load_graph_callback():
+    output_text.set('Creating the graph ...')
+    filename = tkinter.filedialog.askopenfilename(defaultextension='.txt', filetypes=[('Text files', '.txt')])
+    global agent
+    agent = GraphAgent(filename)
+    global graph
+    graph = agent.graph.copy()
+    global pos, names, weights
+    pos = {}
+    names = {}
+    weights = {}
 
-nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
-nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
-nx.draw_networkx_labels(graph, pos, names, font_size=13)
+    for key in graph.nodes_iter():
+        pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
+        names[key] = graph.node[key]['name'] + '\n\n'
 
-canvas = FigureCanvasTkAgg(figure, master)
-canvas.show()
-canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
+    for source , target , attribute in graph.edges_iter(data=True):
+        weights[(source , target)] = attribute['cost']
 
-canvas.mpl_connect('button_press_event', onclick)
-
-
-def add_node(name, x, y):
-    agent.add_node(name, x, y)
-    reset()
     combox_source['values'] = list(names.values())
     combox_target['values'] = list(names.values())
 
+    output_text.set(output_text.get() + '\nDone!')
+    output_text.set(output_text.get() + '\nDrawing the graph ...')
 
+    plt.clf()
+    nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
+    nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
+    nx.draw_networkx_labels(graph, pos, names, font_size=13)
+    canvas.show()
+    output_text.set(output_text.get() + '\nDone!')
+
+
+# Load heuristic data from file
+def load_heuristic_callback():
+    filename = tkinter.filedialog.askopenfilename(defaultextension='.txt', filetypes=[('Text files', '.txt')])
+    global agent
+    agent.load_heuristic(filename)
+    output_text.set('Done!')
+
+
+# Add new node to the graph
 def add_new_node_callback():
     new_node_panel = tkinter.Toplevel()
     new_node_panel.geometry("300x125")
@@ -92,11 +119,7 @@ def add_new_node_callback():
     cancel.pack(side=tkinter.LEFT)
 
 
-def add_edge(source, target, weight):
-    agent.add_edge(source, target, weight)
-    reset()
-
-
+# Add new edge to the graph
 def add_new_edge_callback():
     new_edge_panel = tkinter.Toplevel()
     new_edge_panel.geometry("300x125")
@@ -131,20 +154,78 @@ def add_new_edge_callback():
     cancel = tkinter.Button(action_frame, text='Exit', command=new_edge_panel.destroy)
     cancel.pack(side=tkinter.LEFT)
 
-graph_control_frame = tkinter.Frame(master)
-graph_control_frame.grid(row=0, column=1)
 
-tkinter.Label(graph_control_frame, text="GRAPH", font=("Helvetica", 16)).pack(side=tkinter.TOP)
+# Reset the graph and remove all paths drawn
+def reset():
+    global output_text
+    output_text.set('')
 
-button_add_node = tkinter.Button(graph_control_frame, text='Add nodes' , command = add_new_node_callback)
-button_add_node.pack()
+    plt.clf()
+    names.clear()
+    pos.clear()
+    weights.clear()
 
-button_add_edge = tkinter.Button(graph_control_frame, text='Add edges' , command = add_new_edge_callback)
-button_add_edge.pack()
+    graph = agent.graph.copy()
 
-node_labels = {}
+    for key in graph.nodes_iter():
+        pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
+        names[key] = graph.node[key]['name'] + '\n\n'
+
+    for source , target , attribute in graph.edges_iter(data=True):
+        weights[(source , target)] = attribute['cost']
+
+    nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
+    nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
+    nx.draw_networkx_labels(graph, pos, names, font_size=13)
+    canvas.show()
+    global state
+    state = -1
 
 
+# Launch the A* algorithm
+def launch_a_star():
+    info = get_info()
+    global iterator
+    iterator = a_star_algorithm(agent , info[0] , info[1])
+    print(iterator)
+    global state
+    state = 0
+
+
+# Launch the IDS algorithm
+def launch_ids():
+    info = get_info()
+    global iterator
+    iterator = ids_algorithm(agent , info[0] , info[1])
+    global state
+    state = 1
+
+
+# Launch the UCS algorithm
+def launch_ucs():
+    info = get_info()
+    global iterator
+    iterator = UCS(agent , info[0] , info[1])
+    global state
+    state = 7
+
+
+# Run the chosen algorithm with the set speed
+def run_callback():
+    global run_flag
+    run_flag = True
+    next_stage()
+
+run_flag = False
+
+
+# Export the graph on exit
+def on_window_closed():
+    agent.export('graph_export.txt')
+    master.destroy()
+
+
+# Show the next stage of the running algorithm
 def next_stage():
     global state
     if state == -1:
@@ -154,7 +235,6 @@ def next_stage():
         global graph
         graph = agent.graph.copy()
         if state == 0:
-            # names.clear()
             opened = stage['opened']
             closed = stage['closed']
             cost = stage['cost']
@@ -187,7 +267,6 @@ def next_stage():
             nx.draw_networkx_edges(graph , pos , edgelist=edges , edge_color='#1b5e20' , width=4)
 
         elif state == 1:
-            # names.clear()
             edges = []
             cur_path = stage['current path']
             opened = stage['opened']
@@ -203,18 +282,6 @@ def next_stage():
                 canvas.show()
                 node_labels.clear()
 
-            # new_labels = {}
-            # renew_labels = {}
-            # for i, node in enumerate(cur_path):
-            #     new_value = 'd=' + str(i)
-            #     if node not in node_labels:
-            #         new_labels[node] = '\n\n\n\n' + new_value
-            #         node_labels[node] = '\n\n\n\n' + new_value
-            #     elif node in renew_labels:
-            #         renew_labels[renew_labels[node]] = renew_labels[node] + '\n' + new_value
-            #     else:
-            #         renew_labels[node_labels[node]] = node_labels[node] + '\n' + new_value
-
             for i in range(0, len(cur_path) - 1):
                 edges.append((cur_path[i], cur_path[i + 1]))
 
@@ -225,9 +292,6 @@ def next_stage():
                 opened_nodes.add(node)
 
             nx.draw_networkx_nodes(graph, pos, nodelist=opened_nodes, node_color='#4caf50')
-            # nx.draw_networkx_nodes(graph, pos, nodelist=cur_path, node_color='#3f51b5')
-            # nx.draw_networkx_labels(graph, pos, node_labels, font_weight='normal')
-            # nx.relabel_nodes(graph, renew_labels)
             nx.draw_networkx_edges(graph, pos, edgelist=graph.edges(), edge_color='#2196f3', width=4)
             nx.draw_networkx_edges(graph, pos, edgelist=edges, edge_color='#1b5e20', width=4)
 
@@ -252,10 +316,22 @@ def next_stage():
             nx.draw_networkx_labels(graph, pos, new_labels, font_weight='normal')
 
         canvas.show()
+        if run_flag:
+            time.sleep(0.1 + 0.9 * (float(100 - wait_interval.get()) / 100))
+            next_stage()
     except StopIteration as exception:
         result = exception.value
         if result is None:
             return
+
+        path_name = []
+        for node in result['path']:
+            path_name.append(agent.graph.node[node]['name'])
+        print(path_name)
+
+        global output_text
+        output_text.set("Path: " + str(path_name) + "\nCost: " + str(result['cost']))
+
         is_first = True
         previous = -1
         pair = []
@@ -268,33 +344,47 @@ def next_stage():
                 pair.append((previous , node))
                 previous = node
         nx.draw_networkx_edges(graph , pos , edgelist=pair , edge_color='r' , width=4)
+
         canvas.show()
         print(result)
 
 
-def reset():
-    plt.clf()
-    names.clear()
-    pos.clear()
-    weights.clear()
+'''================================================================================================================='''
 
-    graph = agent.graph.copy()
+canvas = FigureCanvasTkAgg(figure, master)
+canvas.show()
+canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
 
-    for key in graph.nodes_iter():
-        pos[key] = (graph.node[key]['x'], graph.node[key]['y'])
-        names[key] = graph.node[key]['name'] + '\n\n'
-
-    for source , target , attribute in graph.edges_iter(data=True):
-        weights[(source , target)] = attribute['cost']
-
-    nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
-    nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
-    nx.draw_networkx_labels(graph, pos, names, font_size=13)
-    canvas.show()
-    global state
-    state = -1
+canvas.mpl_connect('button_press_event', onclick)
 
 
+nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
+nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
+nx.draw_networkx_labels(graph, pos, names, font_size=13)
+
+
+'''====================================================================================================================
+'   Callbacks
+===================================================================================================================='''
+
+
+# Add new node to the graph
+def add_node(name, x, y):
+    agent.add_node(name, x, y)
+    reset()
+    combox_source['values'] = list(names.values())
+    combox_target['values'] = list(names.values())
+
+
+# Add new edge to the graph
+def add_edge(source, target, weight):
+    agent.add_edge(source, target, weight)
+    reset()
+
+node_labels = {}
+
+
+# Get the information needed to run
 def get_info():
     start_name = list(names.values())[combox_source.current()]
     goal_name = list(names.values())[combox_target.current()]
@@ -308,33 +398,46 @@ def get_info():
 
 iterator = {}
 
-
-def launch_a_star():
-    info = get_info()
-    global iterator
-    iterator = a_star_algorithm(agent , info[0] , info[1])
-    global state
-    state = 0
+'''================================================================================================================='''
 
 
-def launch_ids():
-    info = get_info()
-    global iterator
-    iterator = ids_algorithm(agent , info[0] , info[1])
-    global state
-    state = 1
 
-def launch_ucs():
-    info = get_info()
-    global iterator
-    iterator = UCS(agent , info[0] , info[1])
-    global state
-    state = 7
+'''====================================================================================================================
+'   Widgets
+===================================================================================================================='''
 
-demo_frame = tkinter.Frame(master)
-demo_frame.grid(row=2, column=1)
+control_panel = tkinter.Frame(master)
+control_panel.grid(row=0, column=1)
 
-tkinter.Label(demo_frame, text="DEMO", font=("Helvetica", 16)).pack(side=tkinter.TOP)
+graph_control_frame = tkinter.LabelFrame(control_panel, text='GRAPH')
+graph_control_frame.pack(fill=tkinter.BOTH, expand=1)
+
+tkinter.Label(graph_control_frame, text="Add").pack(side=tkinter.TOP)
+
+add_frame = tkinter.Frame(graph_control_frame)
+add_frame.pack()
+
+button_add_node = tkinter.Button(add_frame, text='Add nodes' , command = add_new_node_callback)
+button_add_node.pack(side=tkinter.LEFT)
+
+button_add_edge = tkinter.Button(add_frame, text='Add edges' , command = add_new_edge_callback)
+button_add_edge.pack(side=tkinter.LEFT)
+
+tkinter.Label(graph_control_frame, text="Load").pack()
+
+load_frame = tkinter.Frame(graph_control_frame)
+load_frame.pack()
+
+button_load_graph = tkinter.Button(load_frame, text='Load graph', command=load_graph_callback)
+button_load_graph.pack(side=tkinter.LEFT)
+
+button_load_heuristic = tkinter.Button(load_frame, text='Load heuristic', command=None)
+button_load_heuristic.pack(side=tkinter.LEFT)
+
+
+demo_frame = tkinter.LabelFrame(control_panel, text='DEMO')
+demo_frame.pack(fill=tkinter.BOTH, expand=1)
+
 tkinter.Label(demo_frame, text="Source").pack(side=tkinter.TOP)
 combox_source = ttk.Combobox(demo_frame, values=list(names.values()), state='readonly')
 combox_source.pack()
@@ -358,16 +461,32 @@ button_ucs = tkinter.Button(alg_frame, text='UCS', command=launch_ucs)
 button_ucs.pack(side=tkinter.LEFT)
 
 tkinter.Label(demo_frame, text="Control").pack(side=tkinter.TOP)
-button_next = tkinter.Button(demo_frame, text='Next' , command = next_stage)
-button_next.pack()
+
+wait_interval = tkinter.IntVar()
+wait_interval.set(100)
+interval_slider = tkinter.Scale(demo_frame, from_=0, to=100, orient=tkinter.HORIZONTAL, variable=wait_interval,
+                                label='Speed')
+interval_slider.pack(fill=tkinter.BOTH, expand=1)
+
+demo_control_frame = tkinter.Frame(demo_frame)
+demo_control_frame.pack()
+
+button_run = tkinter.Button(demo_control_frame, text='Run' , command=run_callback)
+button_run.pack(side=tkinter.LEFT)
+
+button_next = tkinter.Button(demo_control_frame, text='Next' , command = next_stage)
+button_next.pack(side=tkinter.LEFT)
 
 button_reset = tkinter.Button(demo_frame, text='Reset' , command=reset)
 button_reset.pack()
 
+output_text = tkinter.StringVar()
+output_label = tkinter.Label(demo_frame, relief=tkinter.SUNKEN, textvariabl=output_text, width=24, height=32,
+                             justify=tkinter.LEFT, anchor=tkinter.NW, wraplength=175)
+output_label.pack(fill=tkinter.BOTH, expand=1)
 
-def on_window_closed():
-    agent.export('graph_export.txt')
-    master.destroy()
 
 master.protocol(name="WM_DELETE_WINDOW", func=on_window_closed)
 master.mainloop()
+
+'''================================================================================================================='''

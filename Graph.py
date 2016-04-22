@@ -32,9 +32,22 @@ class GraphAgent:
                 c = int(input_file.readline())
                 self.data.add_edge(a, b, cost=c)
 
+        self.hdata = {}
+
+    def load_heuristic_file(self, h_filename):
+        with open(h_filename , 'r') as h_file:
+            size = int(h_file.readline())
+            for i in range(size):
+                node = int(h_file.readline())
+                cost = int(h_file.readline())
+                self.hdata[node] = cost
+
     @property
     def graph(self):
         return self.data
+
+    def lone_heuristic(self , source):
+        return self.hdata[source]
 
     def heuristic(self , source , target):
         x = self.graph.node[source]['x'] - self.graph.node[target]['x']
