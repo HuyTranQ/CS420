@@ -17,7 +17,7 @@ matplotlib.use('TkAgg')
 master = tkinter.Tk()
 master.wm_title("Final Project - CS420")
 
-figure = plt.figure(figsize=(19 , 11))
+figure = plt.figure(figsize=(16 , 10))
 mouse_x = tkinter.IntVar()
 mouse_y = tkinter.IntVar()
 
@@ -192,8 +192,10 @@ def reset():
 def launch_a_star():
     info = get_info()
     global iterator
-    iterator = a_star_algorithm(agent , info[0] , info[1])
-    print(iterator)
+    if len(nx.nodes(agent.graph)) > 30:
+        iterator = a_star_algorithm(agent , info[0] , info[1], False)
+    else:
+        iterator = a_star_algorithm(agent , info[0] , info[1], True)
     global state
     state = 0
 
@@ -202,7 +204,10 @@ def launch_a_star():
 def launch_ids():
     info = get_info()
     global iterator
-    iterator = ids_algorithm(agent , info[0] , info[1])
+    if len(nx.nodes(agent.graph)) > 30:
+        iterator = ids_algorithm(agent , info[0] , info[1], False)
+    else:
+        iterator = ids_algorithm(agent , info[0] , info[1], True)
     global state
     state = 1
 
@@ -211,7 +216,10 @@ def launch_ids():
 def launch_ucs():
     info = get_info()
     global iterator
-    iterator = UCS(agent , info[0] , info[1])
+    if len(nx.nodes(agent.graph)) > 30:
+        iterator = UCS(agent , info[0] , info[1], False)
+    else:
+        iterator = UCS(agent , info[0] , info[1], True)
     global state
     state = 7
 
@@ -364,7 +372,6 @@ canvas.get_tk_widget().grid(row=0 , column=0 , rowspan=3)
 
 canvas.mpl_connect('button_press_event', onclick)
 
-
 nx.draw(graph, pos, node_color='#ff5722', edge_color='#2196f3', width=4, linewidths=0)
 nx.draw_networkx_edge_labels(graph , pos , weights , font_size=13)
 nx.draw_networkx_labels(graph, pos, names, font_size=13)
@@ -406,8 +413,6 @@ def get_info():
 iterator = {}
 
 '''================================================================================================================='''
-
-
 
 '''====================================================================================================================
 '   Widgets
@@ -488,7 +493,7 @@ button_reset = tkinter.Button(demo_frame, text='Reset' , command=reset)
 button_reset.pack()
 
 output_text = tkinter.StringVar()
-output_label = tkinter.Label(demo_frame, relief=tkinter.SUNKEN, textvariabl=output_text, width=24, height=32,
+output_label = tkinter.Label(demo_frame, relief=tkinter.SUNKEN, textvariabl=output_text, width=24, height=16,
                              justify=tkinter.LEFT, anchor=tkinter.NW, wraplength=175)
 output_label.pack(fill=tkinter.BOTH, expand=1)
 

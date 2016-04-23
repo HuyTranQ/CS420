@@ -1,9 +1,7 @@
 import heapq
 
 
-
-
-def UCS(graph, start, goal):
+def UCS(graph, start, goal, iterate):
     frontier = [(0, start, [])]
     explored = []
     nodes_checked = 0
@@ -14,7 +12,8 @@ def UCS(graph, start, goal):
         if node == goal:
             return {'path': path, 'cost': cost, 'checked' : nodes_checked}
         #yield {'frontier': frontier, 'explored': explored}
-        yield{'cost': cost, 'node': node, 'path': path, 'start':start, 'goal': goal}
+        if iterate:
+            yield{'cost': cost, 'node': node, 'path': path, 'start':start, 'goal': goal}
         explored.append(node)
         for childnode,childcost in graph.data.edge[node].items():
             a = False

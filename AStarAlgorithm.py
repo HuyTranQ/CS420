@@ -1,7 +1,7 @@
 import sys
 
 
-def a_star_algorithm(agent , start , goal):
+def a_star_algorithm(agent , start , goal, iterate):
     if start == goal:
         return {'cost' : 0 , 'path' : [], 'checked' : 1}
     opened = {start}
@@ -14,8 +14,11 @@ def a_star_algorithm(agent , start , goal):
         cost[node] = sys.maxsize
         total[node] = sys.maxsize
     cost[start] = 0
-    #total[start] = agent.heuristic(start , goal)
-    total[start] = agent.lone_heuristic(start)
+    if agent.default_heuristic:
+        total[start] = agent.heuristic(start , goal)
+    else:
+        total[start] = agent.lone_heuristic(start)
+
     while opened:
         nodes_checked += 1
         current = start
@@ -34,7 +37,8 @@ def a_star_algorithm(agent , start , goal):
             return {'cost' : cost[goal] , 'path' : path, 'checked' : nodes_checked}
         opened.remove(current)
         closed.add(current)
-        #yield {'opened' : opened , 'closed' : closed , 'cost' : cost , 'total' : total , 'previous' : previous}
+        if iterate:
+            yield {'opened' : opened , 'closed' : closed , 'cost' : cost , 'total' : total , 'previous' : previous}
         for neighbor in agent.graph.neighbors(current):
             new_cost = cost[current] + agent.graph[current][neighbor]['cost']
             if new_cost >= cost[neighbor]:
@@ -46,6 +50,8 @@ def a_star_algorithm(agent , start , goal):
                 opened.add(neighbor)
             previous[neighbor] = current
             cost[neighbor] = new_cost
-            #total[neighbor] = new_cost + agent.heuristic(neighbor , goal)
-            total[neighbor] = new_cost + agent.lone_heuristic(neighbor)
+            if agent.default_heuristic:
+                total[neighbor] = new_cost + agent.heuristic(neighbor , goal)
+            else:
+                total[neighbor] = new_cost + agent.lone_heuristic(neighbor)
     return None

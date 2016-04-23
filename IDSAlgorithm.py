@@ -1,7 +1,7 @@
 from networkx import nx
 
 
-def ids_algorithm(graph, start, end):
+def ids_algorithm(graph, start, end, iterate):
     max_limit = 0
 
     nodes_checked = 0
@@ -25,7 +25,7 @@ def ids_algorithm(graph, start, end):
             solution.append(cur[0])
             cost.append(cost[len(cost) - 1] + cur[2])
 
-            if len(solution) == max_limit:
+            if iterate and len(solution) == max_limit:
                 yield {'depth changed' : depth_changed, 'current path' : solution,
                        'opened' : opened, 'cost' : cost[1:len(cost)]}
 
