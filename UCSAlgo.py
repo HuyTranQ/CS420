@@ -6,11 +6,13 @@ import heapq
 def UCS(graph, start, goal):
     frontier = [(0, start, [])]
     explored = []
+    nodes_checked = 0
     while frontier:
+        nodes_checked += 1
         cost, node, path = heapq.heappop(frontier)
         path = path + [node]
         if node == goal:
-            return {'path': path, 'cost': cost}
+            return {'path': path, 'cost': cost, 'checked' : nodes_checked}
         #yield {'frontier': frontier, 'explored': explored}
         yield{'cost': cost, 'node': node, 'path': path, 'start':start, 'goal': goal}
         explored.append(node)

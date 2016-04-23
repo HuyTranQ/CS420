@@ -4,6 +4,8 @@ from networkx import nx
 def ids_algorithm(graph, start, end):
     max_limit = 0
 
+    nodes_checked = 0
+
     # assume maximum depth must be the number of nodes n in the graph (branching factor = 1)
     # then return failure if the depth limit surpass n
     while max_limit <= len(nx.nodes(graph.graph)):
@@ -16,6 +18,7 @@ def ids_algorithm(graph, start, end):
         # search until limit reaches 0
         while len(opened) > 0:
             cur = opened.pop(0)
+            nodes_checked += 1
             while len(solution) != cur[1]:
                 solution.pop(len(solution) - 1)
                 cost.pop(len(cost) - 1)
@@ -30,7 +33,7 @@ def ids_algorithm(graph, start, end):
                 limit = cur[1]
 
             if limit == max_limit and cur[0] == end:    # a solution is found
-                return {'path' : solution, 'cost' : cost[len(cost) - 1]}
+                return {'path' : solution, 'cost' : cost[len(cost) - 1], 'checked' : nodes_checked}
             elif limit < max_limit:
                 if limit == cur[1]:
                     limit += 1
@@ -43,7 +46,7 @@ def ids_algorithm(graph, start, end):
                     tmp.append((child[1], limit, child[2]['cost']))
 
                 opened = tmp + opened
-
+                
                 depth_changed = False
 
         # increase depth limit

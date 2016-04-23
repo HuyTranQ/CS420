@@ -3,12 +3,13 @@ import sys
 
 def a_star_algorithm(agent , start , goal):
     if start == goal:
-        return {'cost' : 0 , 'path' : []}
+        return {'cost' : 0 , 'path' : [], 'checked' : 1}
     opened = {start}
     closed = set()
     previous = {}
     cost = {}
     total = {}
+    nodes_checked = 0
     for node in agent.graph.nodes_iter():
         cost[node] = sys.maxsize
         total[node] = sys.maxsize
@@ -16,6 +17,7 @@ def a_star_algorithm(agent , start , goal):
     #total[start] = agent.heuristic(start , goal)
     total[start] = agent.lone_heuristic(start)
     while opened:
+        nodes_checked += 1
         current = start
         max_total = sys.maxsize
         for node in opened:
@@ -29,7 +31,7 @@ def a_star_algorithm(agent , start , goal):
                 current = previous[current]
             path.append(start)
             path.reverse()
-            return {'cost' : cost[goal] , 'path' : path}
+            return {'cost' : cost[goal] , 'path' : path, 'checked' : nodes_checked}
         opened.remove(current)
         closed.add(current)
         #yield {'opened' : opened , 'closed' : closed , 'cost' : cost , 'total' : total , 'previous' : previous}

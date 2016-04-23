@@ -44,8 +44,11 @@ def onclick(event):
 
 # Load graph from file
 def load_graph_callback():
-    output_text.set('Creating the graph ...')
     filename = tkinter.filedialog.askopenfilename(defaultextension='.txt', filetypes=[('Text files', '.txt')])
+    if filename == '':
+        return
+
+    output_text.set('Creating the graph ...')
     global agent
     agent = GraphAgent(filename)
     global graph
@@ -79,6 +82,9 @@ def load_graph_callback():
 # Load heuristic data from file
 def load_heuristic_callback():
     filename = tkinter.filedialog.askopenfilename(defaultextension='.txt', filetypes=[('Text files', '.txt')])
+    if filename == '':
+        return
+
     global agent
     agent.load_heuristic(filename)
     output_text.set('Done!')
@@ -330,7 +336,8 @@ def next_stage():
         print(path_name)
 
         global output_text
-        output_text.set("Path: " + str(path_name) + "\nCost: " + str(result['cost']))
+        output_text.set("Path: " + str(path_name) + "\nCost: " + str(result['cost']) +
+                        "\nNumber of times nodes are checked: " + str(result['checked']))
 
         is_first = True
         previous = -1
